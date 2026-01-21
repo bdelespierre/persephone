@@ -68,3 +68,32 @@ prompt_password() {
 
     printf '%s' "$password"
 }
+
+# Check password length and warn if too short, prompt for confirmation
+warn_short_password() {
+    local password="$1"
+    local min_length="${2:-8}"
+    local response
+    if [[ ${#password} -lt $min_length ]]; then
+        log_warn "Password is less than $min_length characters"
+        >&2 printf "Continue with weak password? [y/N] "
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            die "Aborted due to weak password"
+        fi
+    fi
+}
+
+# Prompt for password with confirmation (for encryption)
+prompt_password_confirm() {
+    local password confirm
+    while true; do
+        password="$(prompt_password "Enter password: ")"
+        confirm="$(prompt_password "Confirm password: ")"
+        if [[ "$password" == "$confirm" ]]; then
+            printf '%s' "$password"
+            return 0
+        fi
+        log_error "Passwords do not match. Please try again."
+    done
+}

@@ -14,6 +14,7 @@ source "$PROJECT_ROOT/lib/utils.sh"
 VERBOSE=false
 RECURSIVE=false
 PASSWORD=""
+DRY_RUN=false
 
 usage() {
     cat <<EOF
@@ -26,6 +27,7 @@ Options:
     -v, --verbose        Enable verbose output
     -R, --recursive      Recursively lock directory contents
     -p, --password=PASS  Password for encryption (prompted if not provided)
+    -n, --dry-run        Show what would be locked without making changes
 
 Arguments:
     FILE...          One or more files or folders to lock
@@ -95,6 +97,12 @@ lock_item() {
     newname="$(encode_name "$basename" "$PASSWORD")"
     newpath="$dir/$newname"
 
+    # Dry-run mode: just show what would happen
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "Would lock: $item -> $newpath"
+        return $result
+    fi
+
     # Check if target already exists
     if [[ -e "$newpath" ]]; then
         log_error "Target already exists: $newpath"
@@ -123,7 +131,7 @@ lock_item() {
 main() {
     # Parse options with getopt (supports long options)
     local opts
-    if ! opts=$(getopt -o hvRp: --long help,verbose,recursive,password: -n "$(basename "$0")" -- "$@"); then
+    if ! opts=$(getopt -o hvRp:n --long help,verbose,recursive,password:,dry-run -n "$(basename "$0")" -- "$@"); then
         >&2 usage
         exit 1
     fi
@@ -147,6 +155,10 @@ main() {
                 PASSWORD="$2"
                 shift 2
                 ;;
+            -n|--dry-run)
+                DRY_RUN=true
+                shift
+                ;;
             --)
                 shift
                 break
@@ -157,10 +169,13 @@ main() {
         esac
     done
 
-    # Prompt for password if not provided
+    # Prompt for password if not provided (with confirmation)
     if [[ -z "$PASSWORD" ]]; then
-        PASSWORD="$(prompt_password "Enter password: ")"
+        PASSWORD="$(prompt_password_confirm)"
     fi
+
+    # Warn about short passwords
+    warn_short_password "$PASSWORD"
 
     # Check for remaining arguments (files/folders)
     if [[ $# -eq 0 ]]; then
