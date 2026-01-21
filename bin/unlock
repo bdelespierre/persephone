@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+#
+# unlock - Decrypt files/folders encrypted with AES-256-CBC
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Source library functions
+source "$PROJECT_ROOT/lib/utils.sh"
+
+VERBOSE=false
+RECURSIVE=false
+PASSWORD=""
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS] [--] FILE...
+
+Decrypt files/folders encrypted with AES-256-CBC encryption.
+
+Options:
+    -h, --help           Show this help message
+    -v, --verbose        Enable verbose output
+    -R, --recursive      Recursively unlock directory contents
+    -p, --password=PASS  Password for decryption (prompted if not provided)
+
+Arguments:
+    FILE...          One or more encrypted files or folders to unlock
+
+Examples:
+    $(basename "$0") encrypted_file
+    $(basename "$0") -v folder1 folder2
+    $(basename "$0") -- encrypted-file
+
+EOF
+}
+
+verbose_log() {
+    if [[ "$VERBOSE" == true ]]; then
+        log_info "$@"
+    fi
+}
+
+# Decode a filename using AES-256-CBC decryption
+decode_name() {
+    local encoded="$1"
+    local password="$2"
+    # Add back padding if needed, convert from URL-safe, then decrypt
+    local padding=$(( (4 - ${#encoded} % 4) % 4 ))
+    local padded="$encoded$(printf '%*s' "$padding" '' | tr ' ' '=')"
+    # Convert from URL-safe base64 and add newline for openssl
+    printf '%s\n' "$padded" | tr '_' '/' | tr '\-' '+' | openssl enc -aes-256-cbc -d -pbkdf2 -base64 -pass pass:"$password"
+}
+
+decode_file() {
+    local file="$1"
+    local tmpfile
+
+    tmpfile="$(mktemp)"
+    if openssl enc -aes-256-cbc -d -pbkdf2 -base64 -pass pass:"$PASSWORD" -in "$file" -out "$tmpfile"; then
+        mv "$tmpfile" "$file"
+        return 0
+    else
+        rm -f "$tmpfile"
+        return 1
+    fi
+}
+
+unlock_item() {
+    local item="$1"
+    local dir basename newname newpath
+    local result=0
+
+    # Check if item exists
+    if [[ ! -e "$item" ]]; then
+        log_error "No such file or directory: $item"
+        return 1
+    fi
+
+    # Get directory and basename
+    dir="$(dirname "$item")"
+    basename="$(basename "$item")"
+
+    # Don't process . or ..
+    if [[ "$basename" == "." || "$basename" == ".." ]]; then
+        log_warn "Cannot unlock special directory: $item"
+        return 0
+    fi
+
+    # Create new decrypted name
+    newname="$(decode_name "$basename" "$PASSWORD")"
+    newpath="$dir/$newname"
+
+    # Check if target already exists
+    if [[ -e "$newpath" ]]; then
+        log_error "Target already exists: $newpath"
+        return 1
+    fi
+
+    # Perform the rename
+    if ! mv "$item" "$newpath"; then
+        log_error "Failed to unlock: $item"
+        return 1
+    fi
+
+    verbose_log "Unlocked: $item -> $newpath"
+
+    # Decode file contents if it's a regular file
+    if [[ -f "$newpath" ]]; then
+        if ! decode_file "$newpath"; then
+            log_error "Failed to decode: $newpath"
+            return 1
+        fi
+        verbose_log "Decoded: $newpath"
+    fi
+
+    # If recursive and it's a directory, process contents after unlocking
+    if [[ "$RECURSIVE" == true && -d "$newpath" ]]; then
+        local entry
+        while IFS= read -r -d '' entry; do
+            if ! unlock_item "$entry"; then
+                result=1
+            fi
+        done < <(find "$newpath" -maxdepth 1 -mindepth 1 -print0)
+    fi
+
+    return $result
+}
+
+main() {
+    # Parse options with getopt (supports long options)
+    local opts
+    if ! opts=$(getopt -o hvRp: --long help,verbose,recursive,password: -n "$(basename "$0")" -- "$@"); then
+        >&2 usage
+        exit 1
+    fi
+    eval set -- "$opts"
+
+    while true; do
+        case "$1" in
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -v|--verbose)
+                VERBOSE=true
+                shift
+                ;;
+            -R|--recursive)
+                RECURSIVE=true
+                shift
+                ;;
+            -p|--password)
+                PASSWORD="$2"
+                shift 2
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                die "Invalid option: $1"
+                ;;
+        esac
+    done
+
+    # Prompt for password if not provided
+    if [[ -z "$PASSWORD" ]]; then
+        PASSWORD="$(prompt_password "Enter password: ")"
+    fi
+
+    # Check for remaining arguments (files/folders)
+    if [[ $# -eq 0 ]]; then
+        log_error "No files or folders specified"
+        >&2 usage
+        exit 1
+    fi
+
+    # Process each file/folder
+    local exit_code=0
+    for item in "$@"; do
+        if ! unlock_item "$item"; then
+            exit_code=1
+        fi
+    done
+
+    exit "$exit_code"
+}
+
+main "$@"
