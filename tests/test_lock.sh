@@ -362,6 +362,74 @@ test_recursive_verbose() {
     teardown
 }
 
+# Test: Dry-run mode does not modify files
+test_dry_run() {
+    setup
+    local testfile="$TEST_DIR/dryrun.txt"
+    local original_content="dry run content"
+    echo "$original_content" > "$testfile"
+
+    local output
+    output="$("$LOCK" --password=testpassword -n "$testfile" 2>&1)"
+
+    assert_true "[[ -f \"$testfile\" ]]" "Original file should still exist after dry-run"
+    assert_true "[[ \"\$output\" == *'Would lock:'* ]]" "Dry-run shows 'Would lock:' message"
+
+    # Verify content unchanged
+    local content
+    content="$(cat "$testfile")"
+    assert_equals "$original_content" "$content" "File content should be unchanged after dry-run"
+    teardown
+}
+
+# Test: Dry-run with recursive
+test_dry_run_recursive() {
+    setup
+    local testdir="$TEST_DIR/dryrundir"
+    mkdir -p "$testdir/subdir"
+    echo "file1" > "$testdir/file1.txt"
+    echo "file2" > "$testdir/subdir/file2.txt"
+
+    local output
+    output="$("$LOCK" --password=testpassword -n -R "$testdir" 2>&1)"
+
+    assert_true "[[ -d \"$testdir\" ]]" "Directory should still exist after dry-run"
+    assert_true "[[ -f \"$testdir/file1.txt\" ]]" "File1 should still exist after dry-run"
+    assert_true "[[ -f \"$testdir/subdir/file2.txt\" ]]" "File2 should still exist after dry-run"
+    assert_true "[[ \"\$output\" == *'Would lock:'* ]]" "Dry-run shows 'Would lock:' messages"
+    teardown
+}
+
+# Test: Short password warning (using -p flag which bypasses confirmation)
+test_short_password_warning() {
+    setup
+    local testfile="$TEST_DIR/shortpw.txt"
+    echo "test" > "$testfile"
+
+    # Short password should trigger warning, but we auto-answer N so it aborts
+    local exit_code=0
+    echo "n" | "$LOCK" -p "abc" "$testfile" 2>/dev/null || exit_code=$?
+
+    assert_equals "1" "$exit_code" "Short password with 'n' response should abort"
+    assert_true "[[ -f \"$testfile\" ]]" "File should still exist after abort"
+    teardown
+}
+
+# Test: Short password accepted with 'y'
+test_short_password_accepted() {
+    setup
+    local testfile="$TEST_DIR/shortpw2.txt"
+    echo "test" > "$testfile"
+
+    # Short password with 'y' should proceed
+    local exit_code=0
+    echo "y" | "$LOCK" -p "abc" "$testfile" >/dev/null 2>&1 || exit_code=$?
+
+    assert_equals "0" "$exit_code" "Short password with 'y' response should succeed"
+    assert_true "[[ ! -f \"$testfile\" ]]" "Original file should be locked"
+    teardown
+}
+
 # Run all tests
 echo "Running lock tests..."
 echo
@@ -383,6 +451,10 @@ test_file_with_spaces
 test_mixed_results
 test_recursive_lock
 test_recursive_verbose
+test_dry_run
+test_dry_run_recursive
+test_short_password_warning
+test_short_password_accepted
 
 echo
 echo "================================"

@@ -412,6 +412,79 @@ test_recursive_verbose() {
     teardown
 }
 
+# Test: Dry-run mode does not modify files (round-trip test)
+test_dry_run() {
+    setup
+    local testfile="$TEST_DIR/dryrun.txt"
+    echo "dry run content" > "$testfile"
+
+    # Lock the file first
+    "$LOCK" --password=testpassword "$testfile" >/dev/null 2>&1
+
+    # Find the encrypted file
+    local encrypted_file
+    encrypted_file="$(find_encrypted_file "$TEST_DIR")"
+    local encrypted_content
+    encrypted_content="$(cat "$encrypted_file")"
+
+    local output
+    output="$("$UNLOCK" --password=testpassword -n "$encrypted_file" 2>&1)"
+
+    assert_true "[[ -f \"$encrypted_file\" ]]" "Encrypted file should still exist after dry-run"
+    assert_true "[[ \"\$output\" == *'Would unlock:'* ]]" "Dry-run shows 'Would unlock:' message"
+
+    # Verify content unchanged
+    local content
+    content="$(cat "$encrypted_file")"
+    assert_equals "$encrypted_content" "$content" "File content should be unchanged after dry-run"
+    teardown
+}
+
+# Test: Dry-run with recursive (round-trip test)
+test_dry_run_recursive() {
+    setup
+    local testdir="$TEST_DIR/dryrundir"
+    mkdir -p "$testdir/subdir"
+    echo "file1" > "$testdir/file1.txt"
+    echo "file2" > "$testdir/subdir/file2.txt"
+
+    # Lock recursively
+    "$LOCK" --password=testpassword -R "$testdir" >/dev/null 2>&1
+
+    # Find the encrypted directory
+    local encrypted_dir
+    encrypted_dir="$(find_encrypted_dir "$TEST_DIR")"
+
+    local output
+    output="$("$UNLOCK" --password=testpassword -n -R "$encrypted_dir" 2>&1)"
+
+    assert_true "[[ -d \"$encrypted_dir\" ]]" "Encrypted directory should still exist after dry-run"
+    assert_true "[[ \"\$output\" == *'Would unlock:'* ]]" "Dry-run shows 'Would unlock:' messages"
+    teardown
+}
+
+# Test: Short password warning
+test_short_password_warning() {
+    setup
+    local testfile="$TEST_DIR/shortpw.txt"
+    echo "test" > "$testfile"
+
+    # Lock the file first with long password
+    "$LOCK" --password=testpassword "$testfile" >/dev/null 2>&1
+
+    # Find the encrypted file
+    local encrypted_file
+    encrypted_file="$(find_encrypted_file "$TEST_DIR")"
+
+    # Short password should trigger warning, 'n' response aborts
+    local exit_code=0
+    echo "n" | "$UNLOCK" -p "abc" "$encrypted_file" 2>/dev/null || exit_code=$?
+
+    assert_equals "1" "$exit_code" "Short password with 'n' response should abort"
+    assert_true "[[ -f \"$encrypted_file\" ]]" "Encrypted file should still exist after abort"
+    teardown
+}
+
 # Run all tests
 echo "Running unlock tests..."
 echo
@@ -433,6 +506,9 @@ test_file_with_spaces
 test_mixed_results
 test_recursive_unlock
 test_recursive_verbose
+test_dry_run
+test_dry_run_recursive
+test_short_password_warning
 
 echo
 echo "================================"

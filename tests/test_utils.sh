@@ -20,10 +20,10 @@ assert_equals() {
     local message="${3:-}"
 
     if [[ "$expected" == "$actual" ]]; then
-        ((tests_passed++))
+        ((tests_passed++)) || true
         echo -e "${GREEN}PASS${NC}: $message"
     else
-        ((tests_failed++))
+        ((tests_failed++)) || true
         echo -e "${RED}FAIL${NC}: $message"
         echo "  Expected: $expected"
         echo "  Actual:   $actual"
@@ -35,10 +35,10 @@ assert_true() {
     local message="${2:-}"
 
     if eval "$condition"; then
-        ((tests_passed++))
+        ((tests_passed++)) || true
         echo -e "${GREEN}PASS${NC}: $message"
     else
-        ((tests_failed++))
+        ((tests_failed++)) || true
         echo -e "${RED}FAIL${NC}: $message"
     fi
 }
@@ -54,12 +54,36 @@ test_file_readable() {
     assert_true "! file_readable /nonexistent/file" "nonexistent file should not be readable"
 }
 
+test_warn_short_password_short() {
+    # Short password with 'n' should exit with error
+    local exit_code=0
+    echo "n" | warn_short_password "abc" 8 2>/dev/null || exit_code=$?
+    assert_equals "1" "$exit_code" "Short password rejected with 'n' should exit 1"
+}
+
+test_warn_short_password_accepted() {
+    # Short password with 'y' should continue
+    local exit_code=0
+    echo "y" | warn_short_password "abc" 8 2>/dev/null || exit_code=$?
+    assert_equals "0" "$exit_code" "Short password accepted with 'y' should exit 0"
+}
+
+test_warn_short_password_long_enough() {
+    # Long enough password should not prompt
+    local exit_code=0
+    warn_short_password "longpassword" 8 2>/dev/null || exit_code=$?
+    assert_equals "0" "$exit_code" "Long password should exit 0 without prompt"
+}
+
 # Run tests
 echo "Running tests..."
 echo
 
 test_command_exists
 test_file_readable
+test_warn_short_password_short
+test_warn_short_password_accepted
+test_warn_short_password_long_enough
 
 echo
 echo "================================"
