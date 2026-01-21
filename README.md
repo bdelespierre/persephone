@@ -1,0 +1,133 @@
+# bash-conceal
+
+A Bash-based file encryption tool that encrypts both file contents and filenames using AES-256-CBC encryption.
+
+## Features
+
+- Encrypts file contents using AES-256-CBC with PBKDF2 key derivation
+- Encrypts filenames to URL-safe base64 format
+- Supports recursive encryption/decryption of directories
+- Password confirmation when locking (prevents typos)
+- Password length warnings for weak passwords
+- Dry-run mode to preview operations
+- Verbose logging option
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd bash-conceal
+   ```
+
+2. Add the `bin` directory to your PATH, or create symlinks:
+   ```bash
+   export PATH="$PATH:$(pwd)/bin"
+   ```
+
+3. Ensure OpenSSL is installed (required for encryption):
+   ```bash
+   openssl version
+   ```
+
+## Usage
+
+### Locking (Encrypting) Files
+
+```bash
+# Lock a single file (prompts for password twice)
+lock file.txt
+
+# Lock multiple files
+lock file1.txt file2.txt
+
+# Lock with password provided (skips confirmation)
+lock -p "mypassword" file.txt
+
+# Lock a directory recursively
+lock -R my_folder/
+
+# Dry-run to see what would be locked
+lock -n file.txt
+
+# Verbose mode
+lock -v file.txt
+```
+
+### Unlocking (Decrypting) Files
+
+```bash
+# Unlock an encrypted file
+unlock U2FsdGVkX1...
+
+# Unlock multiple files
+unlock encrypted1 encrypted2
+
+# Unlock with password provided
+unlock -p "mypassword" encrypted_file
+
+# Unlock a directory recursively
+unlock -R encrypted_folder/
+
+# Dry-run to see what would be unlocked
+unlock -n encrypted_file
+
+# Verbose mode
+unlock -v encrypted_file
+```
+
+## Options Reference
+
+### lock
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message |
+| `-v, --verbose` | Enable verbose output |
+| `-R, --recursive` | Recursively lock directory contents |
+| `-p, --password=PASS` | Password for encryption (prompted if not provided) |
+| `-n, --dry-run` | Show what would be locked without making changes |
+
+### unlock
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message |
+| `-v, --verbose` | Enable verbose output |
+| `-R, --recursive` | Recursively unlock directory contents |
+| `-p, --password=PASS` | Password for decryption (prompted if not provided) |
+| `-n, --dry-run` | Show what would be unlocked without making changes |
+
+## Encryption Details
+
+- **Algorithm**: AES-256-CBC (Advanced Encryption Standard with 256-bit key, Cipher Block Chaining mode)
+- **Key Derivation**: PBKDF2 (Password-Based Key Derivation Function 2)
+- **Filename Encoding**: URL-safe Base64 (replaces `+/` with `-_`, removes padding)
+- **Salt**: Random salt is generated for each encryption operation
+
+## Security Considerations
+
+- **Password Strength**: The tool warns if passwords are less than 8 characters. Use strong, unique passwords.
+- **Password Confirmation**: When locking interactively, the password is prompted twice to prevent typos.
+- **No Recovery**: There is no password recovery mechanism. If you forget your password, encrypted files cannot be recovered.
+- **Memory**: Passwords are handled in memory during execution. Consider clearing bash history if using `-p` flag.
+- **Temporary Files**: The tool uses temporary files during encryption/decryption, which are cleaned up on success or failure.
+
+## Limitations
+
+- Encrypted filenames can become very long, potentially exceeding filesystem limits
+- Symbolic links are not specially handled (they are treated as regular files/directories)
+- The tool requires OpenSSL to be installed
+- Large files are loaded entirely into memory during encryption/decryption
+- Password provided via `-p` flag may be visible in process listings
+
+## Running Tests
+
+```bash
+bash tests/test_lock.sh
+bash tests/test_unlock.sh
+```
+
+## License
+
+See LICENSE file for details.
