@@ -10,7 +10,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 UNLOCK="$PROJECT_ROOT/bin/unlock"
 LOCK="$PROJECT_ROOT/bin/lock"
 
-source "$PROJECT_ROOT/lib/utils.sh"
+source "$PROJECT_ROOT/lib/lockbox/utils.sh"
 
 # Test counter
 tests_passed=0

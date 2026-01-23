@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Source library functions
-source "$PROJECT_ROOT/lib/utils.sh"
+source "$PROJECT_ROOT/lib/lockbox/utils.sh"
 
 VERBOSE=false
 RECURSIVE=false

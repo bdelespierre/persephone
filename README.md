@@ -1,4 +1,4 @@
-# bash-conceal
+# lockbox.sh
 
 A Bash-based file encryption tool that encrypts both file contents and filenames using AES-256-CBC encryption.
 
@@ -17,7 +17,7 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd bash-conceal
+   cd lockbox
    ```
 
 2. Install using make (installs to `/usr/local/bin`):

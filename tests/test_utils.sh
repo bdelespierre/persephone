@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-source "$PROJECT_ROOT/lib/utils.sh"
+source "$PROJECT_ROOT/lib/lockbox/utils.sh"
 
 # Test counter
 tests_passed=0
@@ -50,7 +50,7 @@ test_command_exists() {
 }
 
 test_file_readable() {
-    assert_true "file_readable $PROJECT_ROOT/lib/utils.sh" "utils.sh should be readable"
+    assert_true "file_readable $PROJECT_ROOT/lib/lockbox/utils.sh" "utils.sh should be readable"
     assert_true "! file_readable /nonexistent/file" "nonexistent file should not be readable"
 }
 

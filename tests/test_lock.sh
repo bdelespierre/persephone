@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LOCK="$PROJECT_ROOT/bin/lock"
 
-source "$PROJECT_ROOT/lib/utils.sh"
+source "$PROJECT_ROOT/lib/lockbox/utils.sh"
 
 # Test counter
 tests_passed=0
