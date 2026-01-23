@@ -20,7 +20,17 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
    cd bash-conceal
    ```
 
-2. Add the `bin` directory to your PATH, or create symlinks:
+2. Install using make (installs to `/usr/local/bin`):
+   ```bash
+   sudo make install
+   ```
+
+   Or install to a custom location:
+   ```bash
+   make install PREFIX=~/.local
+   ```
+
+   Alternatively, add the `bin` directory to your PATH:
    ```bash
    export PATH="$PATH:$(pwd)/bin"
    ```
@@ -29,6 +39,17 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
    ```bash
    openssl version
    ```
+
+## Uninstallation
+
+```bash
+sudo make uninstall
+```
+
+Or if installed with a custom prefix:
+```bash
+make uninstall PREFIX=~/.local
+```
 
 ## Usage
 
@@ -124,10 +145,16 @@ unlock -v encrypted_file
 ## Running Tests
 
 ```bash
+make test
+```
+
+Or run individual test files:
+```bash
 bash tests/test_lock.sh
 bash tests/test_unlock.sh
+bash tests/test_utils.sh
 ```
 
 ## License
 
-See LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
