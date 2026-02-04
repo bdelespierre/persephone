@@ -5,8 +5,7 @@ BINDIR := $(PREFIX)/bin
 LIBDIR := $(PREFIX)/lib
 
 test:
-	@bash tests/test_utils.sh
-	@bash tests/test_crypt.sh
+	@bats tests/
 
 install:
 	@mkdir -p $(BINDIR)

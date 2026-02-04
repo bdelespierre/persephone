@@ -76,6 +76,20 @@ prompt_password() {
     printf '%s' "$password"
 }
 
+# Prompt for password with confirmation (for encryption)
+prompt_password_confirm() {
+    local password confirm
+    while true; do
+        password="$(prompt_password "Enter password: ")"
+        confirm="$(prompt_password "Confirm password: ")"
+        if [[ "$password" == "$confirm" ]]; then
+            printf '%s' "$password"
+            return 0
+        fi
+        log_error "Passwords do not match. Please try again."
+    done
+}
+
 # Check password length and warn if too short, prompt for confirmation
 warn_short_password() {
     local password="$1"
@@ -89,18 +103,4 @@ warn_short_password() {
             die "Aborted due to weak password"
         fi
     fi
-}
-
-# Prompt for password with confirmation (for encryption)
-prompt_password_confirm() {
-    local password confirm
-    while true; do
-        password="$(prompt_password "Enter password: ")"
-        confirm="$(prompt_password "Confirm password: ")"
-        if [[ "$password" == "$confirm" ]]; then
-            printf '%s' "$password"
-            return 0
-        fi
-        log_error "Passwords do not match. Please try again."
-    done
 }

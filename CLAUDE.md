@@ -9,11 +9,12 @@ persephone.sh — a pure Bash file encryption tool that encrypts both file conte
 ## Commands
 
 ```bash
-make test                      # Run all tests (utils, crypt)
-bash tests/test_crypt.sh       # Run crypt tests only
-bash tests/test_utils.sh       # Run utility tests only
-make install PREFIX=~/.local   # Install (default PREFIX=/usr/local)
-make uninstall                 # Uninstall
+make test                        # Run all tests (bats)
+bats tests/                      # Run all tests directly
+bats tests/test_crypt.bats       # Run crypt tests only
+bats tests/test_utils.bats       # Run utility tests only
+make install PREFIX=~/.local     # Install (default PREFIX=/usr/local)
+make uninstall                   # Uninstall
 ```
 
 To run the tool directly without installing, use `bin/crypt`.
@@ -30,10 +31,10 @@ CLI pattern: `crypt [OPTIONS] [--] FILE...` with flags `-d` (decrypt), `-h` (hel
 
 ## Testing
 
-Tests use a custom Bash assertion framework defined inline in each test file:
+Tests use the [bats](https://github.com/bats-core/bats-core) framework (Bash Automated Testing System). No helper libraries required.
 
-- `assert_equals "expected" "actual" "message"`
-- `assert_true "condition" "message"`
-- `assert_exit_code expected actual "message"`
+- **`tests/test_helper.bash`** — Shared setup: project root resolution, sources `utils.sh`, defines `find_encrypted_file()` and `find_encrypted_dir()` helpers.
+- **`tests/test_utils.bats`** — Unit tests for `lib/persephone/utils.sh` functions (`command_exists`, `file_readable`, `warn_short_password`).
+- **`tests/test_crypt.bats`** — Integration tests for `bin/crypt`: argument validation, single/multiple file operations, recursive directory handling, dry-run mode, verbose output, password warnings, special characters in filenames, and round-trip encryption/decryption verification.
 
-Each test file creates a temp directory, runs tests sequentially, and reports pass/fail counts. Tests cover argument validation, single/multiple file operations, recursive directory handling, dry-run mode, verbose output, password confirmation, short password warnings, special characters in filenames, and round-trip encryption/decryption verification.
+Each crypt test creates a temporary directory in `setup()` and removes it in `teardown()`.
