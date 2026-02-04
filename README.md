@@ -1,6 +1,6 @@
 # persephone.sh
 
-A Bash-based file encryption tool that encrypts both file contents and filenames using AES-256-CBC encryption.
+A Bash tool that encrypts file contents and filenames using AES-256-CBC.
 
 ## Table of Contents
 

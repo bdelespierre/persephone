@@ -11,6 +11,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Source library functions
 source "$PROJECT_ROOT/lib/persephone/crypt.bash"
 
+VERSION="0.1.0"
 VERBOSE=false
 RECURSIVE=false
 PASSWORD=""
@@ -25,6 +26,7 @@ Encrypt or decrypt files/folders using AES-256-CBC encryption.
 
 Options:
     -h, --help           Show this help message
+    -V, --version        Show version
     -d, --decrypt        Decrypt mode (default is encrypt)
     -v, --verbose        Enable verbose output
     -R, --recursive      Recursively process directory contents
@@ -47,7 +49,7 @@ EOF
 main() {
     # Parse options with getopt (supports long options)
     local opts
-    if ! opts=$(getopt -o dhvRp:n --long decrypt,help,verbose,recursive,password:,dry-run -n "$(basename "$0")" -- "$@"); then
+    if ! opts=$(getopt -o dVhvRp:n --long decrypt,version,help,verbose,recursive,password:,dry-run -n "$(basename "$0")" -- "$@"); then
         >&2 usage
         exit 1
     fi
@@ -57,6 +59,10 @@ main() {
         case "$1" in
             -h|--help)
                 usage
+                exit 0
+                ;;
+            -V|--version)
+                echo "crypt $VERSION"
                 exit 0
                 ;;
             -d|--decrypt)
