@@ -11,16 +11,16 @@ test:
 
 install:
 	@mkdir -p $(BINDIR)
-	@mkdir -p $(LIBDIR)/lockbox
+	@mkdir -p $(LIBDIR)/persephone
 	@cp bin/lock $(BINDIR)/lock
 	@cp bin/unlock $(BINDIR)/unlock
-	@cp lib/lockbox/utils.sh $(LIBDIR)/lockbox/utils.sh
+	@cp lib/persephone/utils.sh $(LIBDIR)/persephone/utils.sh
 	@chmod +x $(BINDIR)/lock $(BINDIR)/unlock
 	@echo "Installed lock and unlock to $(BINDIR)"
-	@echo "Installed utils.sh to $(LIBDIR)/lockbox"
+	@echo "Installed utils.sh to $(LIBDIR)/persephone"
 
 uninstall:
 	@rm -f $(BINDIR)/lock $(BINDIR)/unlock
-	@rm -rf $(LIBDIR)/lockbox
+	@rm -rf $(LIBDIR)/persephone
 	@echo "Removed lock and unlock from $(BINDIR)"
-	@echo "Removed $(LIBDIR)/lockbox"
+	@echo "Removed $(LIBDIR)/persephone"
