@@ -97,7 +97,7 @@ decode_file() {
     fi
 }
 
-lock_item() {
+encrypt_item() {
     local item="$1"
     local dir basename newname newpath
     local result=0
@@ -116,7 +116,7 @@ lock_item() {
     if [[ "$RECURSIVE" == true && -d "$item" ]]; then
         local entry
         while IFS= read -r -d '' entry; do
-            if ! lock_item "$entry"; then
+            if ! encrypt_item "$entry"; then
                 result=1
             fi
         done < <(find "$item" -maxdepth 1 -mindepth 1 -print0)
@@ -128,7 +128,7 @@ lock_item() {
 
     # Dry-run mode: just show what would happen
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "Would lock: $item -> $newpath"
+        log_info "Would encrypt: $item -> $newpath"
         return $result
     fi
 
@@ -149,15 +149,15 @@ lock_item() {
 
     # Perform the rename
     if ! mv "$item" "$newpath"; then
-        log_error "Failed to lock: $item"
+        log_error "Failed to encrypt: $item"
         return 1
     fi
 
-    verbose_log "Locked: $item -> $newpath"
+    verbose_log "Encrypted: $item -> $newpath"
     return $result
 }
 
-unlock_item() {
+decrypt_item() {
     local item="$1"
     local dir basename newname newpath
     local result=0
@@ -174,7 +174,7 @@ unlock_item() {
 
     # Don't process . or ..
     if [[ "$basename" == "." || "$basename" == ".." ]]; then
-        log_warn "Cannot unlock special directory: $item"
+        log_warn "Cannot decrypt special directory: $item"
         return 0
     fi
 
@@ -184,12 +184,12 @@ unlock_item() {
 
     # Dry-run mode: just show what would happen
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "Would unlock: $item -> $newpath"
+        log_info "Would decrypt: $item -> $newpath"
         # If recursive and it's a directory, still show contents in dry-run
         if [[ "$RECURSIVE" == true && -d "$item" ]]; then
             local entry
             while IFS= read -r -d '' entry; do
-                if ! unlock_item "$entry"; then
+                if ! decrypt_item "$entry"; then
                     result=1
                 fi
             done < <(find "$item" -maxdepth 1 -mindepth 1 -print0)
@@ -205,11 +205,11 @@ unlock_item() {
 
     # Perform the rename
     if ! mv "$item" "$newpath"; then
-        log_error "Failed to unlock: $item"
+        log_error "Failed to decrypt: $item"
         return 1
     fi
 
-    verbose_log "Unlocked: $item -> $newpath"
+    verbose_log "Decrypted: $item -> $newpath"
 
     # Decode file contents if it's a regular file
     if [[ -f "$newpath" ]]; then
@@ -220,11 +220,11 @@ unlock_item() {
         verbose_log "Decoded: $newpath"
     fi
 
-    # If recursive and it's a directory, process contents after unlocking
+    # If recursive and it's a directory, process contents after decrypting
     if [[ "$RECURSIVE" == true && -d "$newpath" ]]; then
         local entry
         while IFS= read -r -d '' entry; do
-            if ! unlock_item "$entry"; then
+            if ! decrypt_item "$entry"; then
                 result=1
             fi
         done < <(find "$newpath" -maxdepth 1 -mindepth 1 -print0)
@@ -301,11 +301,11 @@ main() {
     local exit_code=0
     for item in "$@"; do
         if [[ "$DECRYPT" == true ]]; then
-            if ! unlock_item "$item"; then
+            if ! decrypt_item "$item"; then
                 exit_code=1
             fi
         else
-            if ! lock_item "$item"; then
+            if ! encrypt_item "$item"; then
                 exit_code=1
             fi
         fi

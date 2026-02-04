@@ -200,7 +200,7 @@ test_encrypt_verbose_output() {
     local output
     output="$("$CRYPT" -v --password=testpassword "$testfile" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Locked:'* ]]" "-v shows locked message"
+    assert_true "[[ \"\$output\" == *'Encrypted:'* ]]" "-v shows encrypted message"
     teardown
 }
 
@@ -213,7 +213,7 @@ test_encrypt_verbose_long() {
     local output
     output="$("$CRYPT" --verbose --password=testpassword "$testfile" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Locked:'* ]]" "--verbose shows locked message"
+    assert_true "[[ \"\$output\" == *'Encrypted:'* ]]" "--verbose shows encrypted message"
     teardown
 }
 
@@ -362,7 +362,7 @@ test_encrypt_recursive_verbose() {
     local output
     output="$("$CRYPT" --password=testpassword -R -v "$testdir" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Locked:'* ]]" "-R -v shows locked messages"
+    assert_true "[[ \"\$output\" == *'Encrypted:'* ]]" "-R -v shows encrypted messages"
     assert_true "[[ \"\$output\" == *'Encoded:'* ]]" "-R -v shows encoded messages for files"
     teardown
 }
@@ -378,7 +378,7 @@ test_encrypt_dry_run() {
     output="$("$CRYPT" --password=testpassword -n "$testfile" 2>&1)"
 
     assert_true "[[ -f \"$testfile\" ]]" "Original file should still exist after dry-run"
-    assert_true "[[ \"\$output\" == *'Would lock:'* ]]" "Dry-run shows 'Would lock:' message"
+    assert_true "[[ \"\$output\" == *'Would encrypt:'* ]]" "Dry-run shows 'Would encrypt:' message"
 
     # Verify content unchanged
     local content
@@ -401,7 +401,7 @@ test_encrypt_dry_run_recursive() {
     assert_true "[[ -d \"$testdir\" ]]" "Directory should still exist after dry-run"
     assert_true "[[ -f \"$testdir/file1.txt\" ]]" "File1 should still exist after dry-run"
     assert_true "[[ -f \"$testdir/subdir/file2.txt\" ]]" "File2 should still exist after dry-run"
-    assert_true "[[ \"\$output\" == *'Would lock:'* ]]" "Dry-run shows 'Would lock:' messages"
+    assert_true "[[ \"\$output\" == *'Would encrypt:'* ]]" "Dry-run shows 'Would encrypt:' messages"
     teardown
 }
 
@@ -549,7 +549,7 @@ test_decrypt_verbose_output() {
     local output
     output="$("$CRYPT" -d -v --password=testpassword "$encrypted_file" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Unlocked:'* ]]" "-v shows unlocked message"
+    assert_true "[[ \"\$output\" == *'Decrypted:'* ]]" "-v shows decrypted message"
     teardown
 }
 
@@ -569,7 +569,7 @@ test_decrypt_verbose_long() {
     local output
     output="$("$CRYPT" -d --verbose --password=testpassword "$encrypted_file" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Unlocked:'* ]]" "--verbose shows unlocked message"
+    assert_true "[[ \"\$output\" == *'Decrypted:'* ]]" "--verbose shows decrypted message"
     teardown
 }
 
@@ -742,7 +742,7 @@ test_decrypt_recursive_verbose() {
     local output
     output="$("$CRYPT" -d --password=testpassword -R -v "$encrypted_dir" 2>&1)"
 
-    assert_true "[[ \"\$output\" == *'Unlocked:'* ]]" "-R -v shows unlocked messages"
+    assert_true "[[ \"\$output\" == *'Decrypted:'* ]]" "-R -v shows decrypted messages"
     assert_true "[[ \"\$output\" == *'Decoded:'* ]]" "-R -v shows decoded messages for files"
     teardown
 }
@@ -766,7 +766,7 @@ test_decrypt_dry_run() {
     output="$("$CRYPT" -d --password=testpassword -n "$encrypted_file" 2>&1)"
 
     assert_true "[[ -f \"$encrypted_file\" ]]" "Encrypted file should still exist after dry-run"
-    assert_true "[[ \"\$output\" == *'Would unlock:'* ]]" "Dry-run shows 'Would unlock:' message"
+    assert_true "[[ \"\$output\" == *'Would decrypt:'* ]]" "Dry-run shows 'Would decrypt:' message"
 
     # Verify content unchanged
     local content
@@ -794,7 +794,7 @@ test_decrypt_dry_run_recursive() {
     output="$("$CRYPT" -d --password=testpassword -n -R "$encrypted_dir" 2>&1)"
 
     assert_true "[[ -d \"$encrypted_dir\" ]]" "Encrypted directory should still exist after dry-run"
-    assert_true "[[ \"\$output\" == *'Would unlock:'* ]]" "Dry-run shows 'Would unlock:' messages"
+    assert_true "[[ \"\$output\" == *'Would decrypt:'* ]]" "Dry-run shows 'Would decrypt:' messages"
     teardown
 }
 
