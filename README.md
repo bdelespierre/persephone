@@ -7,7 +7,7 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
 - Encrypts file contents using AES-256-CBC with PBKDF2 key derivation
 - Encrypts filenames to URL-safe base64 format
 - Supports recursive encryption/decryption of directories
-- Password confirmation when locking (prevents typos)
+- Password confirmation when encrypting (prevents typos)
 - Password length warnings for weak passwords
 - Dry-run mode to preview operations
 - Verbose logging option
@@ -53,71 +53,60 @@ make uninstall PREFIX=~/.local
 
 ## Usage
 
-### Locking (Encrypting) Files
+### Encrypting Files
 
 ```bash
-# Lock a single file (prompts for password twice)
-lock file.txt
+# Encrypt a single file (prompts for password twice)
+crypt file.txt
 
-# Lock multiple files
-lock file1.txt file2.txt
+# Encrypt multiple files
+crypt file1.txt file2.txt
 
-# Lock with password provided (skips confirmation)
-lock -p "mypassword" file.txt
+# Encrypt with password provided (skips confirmation)
+crypt -p "mypassword" file.txt
 
-# Lock a directory recursively
-lock -R my_folder/
+# Encrypt a directory recursively
+crypt -R my_folder/
 
-# Dry-run to see what would be locked
-lock -n file.txt
+# Dry-run to see what would be encrypted
+crypt -n file.txt
 
 # Verbose mode
-lock -v file.txt
+crypt -v file.txt
 ```
 
-### Unlocking (Decrypting) Files
+### Decrypting Files
 
 ```bash
-# Unlock an encrypted file
-unlock U2FsdGVkX1...
+# Decrypt an encrypted file
+crypt -d encrypted_file
 
-# Unlock multiple files
-unlock encrypted1 encrypted2
+# Decrypt multiple files
+crypt -d encrypted1 encrypted2
 
-# Unlock with password provided
-unlock -p "mypassword" encrypted_file
+# Decrypt with password provided
+crypt -d -p "mypassword" encrypted_file
 
-# Unlock a directory recursively
-unlock -R encrypted_folder/
+# Decrypt a directory recursively
+crypt -d -R encrypted_folder/
 
-# Dry-run to see what would be unlocked
-unlock -n encrypted_file
+# Dry-run to see what would be decrypted
+crypt -d -n encrypted_file
 
 # Verbose mode
-unlock -v encrypted_file
+crypt -d -v encrypted_file
 ```
 
 ## Options Reference
 
-### lock
-
 | Option | Description |
 |--------|-------------|
 | `-h, --help` | Show help message |
+| `-d, --decrypt` | Decrypt mode (default is encrypt) |
 | `-v, --verbose` | Enable verbose output |
-| `-R, --recursive` | Recursively lock directory contents |
-| `-p, --password=PASS` | Password for encryption (prompted if not provided) |
-| `-n, --dry-run` | Show what would be locked without making changes |
-
-### unlock
-
-| Option | Description |
-|--------|-------------|
-| `-h, --help` | Show help message |
-| `-v, --verbose` | Enable verbose output |
-| `-R, --recursive` | Recursively unlock directory contents |
-| `-p, --password=PASS` | Password for decryption (prompted if not provided) |
-| `-n, --dry-run` | Show what would be unlocked without making changes |
+| `-R, --recursive` | Recursively process directory contents |
+| `-p, --password=PASS` | Password for encryption/decryption (prompted if not provided) |
+| `-n, --dry-run` | Show what would be done without making changes |
 
 ## Encryption Details
 
@@ -129,7 +118,7 @@ unlock -v encrypted_file
 ## Security Considerations
 
 - **Password Strength**: The tool warns if passwords are less than 8 characters. Use strong, unique passwords.
-- **Password Confirmation**: When locking interactively, the password is prompted twice to prevent typos.
+- **Password Confirmation**: When encrypting interactively, the password is prompted twice to prevent typos.
 - **No Recovery**: There is no password recovery mechanism. If you forget your password, encrypted files cannot be recovered.
 - **Memory**: Passwords are handled in memory during execution. Consider clearing bash history if using `-p` flag.
 - **Temporary Files**: The tool uses temporary files during encryption/decryption, which are cleaned up on success or failure.
@@ -150,8 +139,7 @@ make test
 
 Or run individual test files:
 ```bash
-bash tests/test_lock.sh
-bash tests/test_unlock.sh
+bash tests/test_crypt.sh
 bash tests/test_utils.sh
 ```
 

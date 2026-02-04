@@ -6,21 +6,19 @@ LIBDIR := $(PREFIX)/lib
 
 test:
 	@bash tests/test_utils.sh
-	@bash tests/test_lock.sh
-	@bash tests/test_unlock.sh
+	@bash tests/test_crypt.sh
 
 install:
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(LIBDIR)/persephone
-	@cp bin/lock $(BINDIR)/lock
-	@cp bin/unlock $(BINDIR)/unlock
+	@cp bin/crypt $(BINDIR)/crypt
 	@cp lib/persephone/utils.sh $(LIBDIR)/persephone/utils.sh
-	@chmod +x $(BINDIR)/lock $(BINDIR)/unlock
-	@echo "Installed lock and unlock to $(BINDIR)"
+	@chmod +x $(BINDIR)/crypt
+	@echo "Installed crypt to $(BINDIR)"
 	@echo "Installed utils.sh to $(LIBDIR)/persephone"
 
 uninstall:
-	@rm -f $(BINDIR)/lock $(BINDIR)/unlock
+	@rm -f $(BINDIR)/crypt
 	@rm -rf $(LIBDIR)/persephone
-	@echo "Removed lock and unlock from $(BINDIR)"
+	@echo "Removed crypt from $(BINDIR)"
 	@echo "Removed $(LIBDIR)/persephone"

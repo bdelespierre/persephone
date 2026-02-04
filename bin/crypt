@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# unlock - Decrypt files/folders encrypted with AES-256-CBC
+# crypt - Encrypt/decrypt files/folders with AES-256-CBC
 #
 
 set -euo pipefail
@@ -15,27 +15,31 @@ VERBOSE=false
 RECURSIVE=false
 PASSWORD=""
 DRY_RUN=false
+DECRYPT=false
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS] [--] FILE...
 
-Decrypt files/folders encrypted with AES-256-CBC encryption.
+Encrypt or decrypt files/folders using AES-256-CBC encryption.
 
 Options:
     -h, --help           Show this help message
+    -d, --decrypt        Decrypt mode (default is encrypt)
     -v, --verbose        Enable verbose output
-    -R, --recursive      Recursively unlock directory contents
-    -p, --password=PASS  Password for decryption (prompted if not provided)
-    -n, --dry-run        Show what would be unlocked without making changes
+    -R, --recursive      Recursively process directory contents
+    -p, --password=PASS  Password for encryption/decryption (prompted if not provided)
+    -n, --dry-run        Show what would be done without making changes
 
 Arguments:
-    FILE...          One or more encrypted files or folders to unlock
+    FILE...          One or more files or folders to process
 
 Examples:
-    $(basename "$0") encrypted_file
+    $(basename "$0") file.txt
+    $(basename "$0") -d encrypted_file
     $(basename "$0") -v folder1 folder2
-    $(basename "$0") -- encrypted-file
+    $(basename "$0") -R -d encrypted_folder/
+    $(basename "$0") -- -file-starting-with-dash.txt
 
 EOF
 }
@@ -44,6 +48,14 @@ verbose_log() {
     if [[ "$VERBOSE" == true ]]; then
         log_info "$@"
     fi
+}
+
+# Encode a filename using AES-256-CBC encryption (URL-safe base64 output)
+encode_name() {
+    local name="$1"
+    local password="$2"
+    # Encrypt with AES-256-CBC, output as base64, then make URL-safe
+    printf '%s' "$name" | openssl enc -aes-256-cbc -salt -pbkdf2 -base64 -pass pass:"$password" | tr '+/' '-_' | tr -d '=' | tr -d '\n'
 }
 
 # Decode a filename using AES-256-CBC decryption
@@ -55,6 +67,20 @@ decode_name() {
     local padded="$encoded$(printf '%*s' "$padding" '' | tr ' ' '=')"
     # Convert from URL-safe base64 and add newline for openssl
     printf '%s\n' "$padded" | tr '_' '/' | tr '\-' '+' | openssl enc -aes-256-cbc -d -pbkdf2 -base64 -pass pass:"$password"
+}
+
+encode_file() {
+    local file="$1"
+    local tmpfile
+
+    tmpfile="$(mktemp)"
+    if openssl enc -aes-256-cbc -salt -pbkdf2 -base64 -pass pass:"$PASSWORD" -in "$file" -out "$tmpfile"; then
+        mv "$tmpfile" "$file"
+        return 0
+    else
+        rm -f "$tmpfile"
+        return 1
+    fi
 }
 
 decode_file() {
@@ -69,6 +95,66 @@ decode_file() {
         rm -f "$tmpfile"
         return 1
     fi
+}
+
+lock_item() {
+    local item="$1"
+    local dir basename newname newpath
+    local result=0
+
+    # Check if item exists
+    if [[ ! -e "$item" ]]; then
+        log_error "No such file or directory: $item"
+        return 1
+    fi
+
+    # Get directory and basename
+    dir="$(dirname "$item")"
+    basename="$(basename "$item")"
+
+    # If recursive and it's a directory, process contents first
+    if [[ "$RECURSIVE" == true && -d "$item" ]]; then
+        local entry
+        while IFS= read -r -d '' entry; do
+            if ! lock_item "$entry"; then
+                result=1
+            fi
+        done < <(find "$item" -maxdepth 1 -mindepth 1 -print0)
+    fi
+
+    # Create new encrypted name
+    newname="$(encode_name "$basename" "$PASSWORD")"
+    newpath="$dir/$newname"
+
+    # Dry-run mode: just show what would happen
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "Would lock: $item -> $newpath"
+        return $result
+    fi
+
+    # Check if target already exists
+    if [[ -e "$newpath" ]]; then
+        log_error "Target already exists: $newpath"
+        return 1
+    fi
+
+    # Encode file contents if it's a regular file
+    if [[ -f "$item" ]]; then
+        if ! encode_file "$item"; then
+            log_error "Failed to encode: $item"
+            return 1
+        fi
+        verbose_log "Encoded: $item"
+    fi
+
+    # Perform the rename
+    if ! mv "$item" "$newpath"; then
+        log_error "Failed to lock: $item"
+        return 1
+    fi
+
+    verbose_log "Locked: $item -> $newpath"
+    return $result
 }
 
 unlock_item() {
@@ -150,7 +236,7 @@ unlock_item() {
 main() {
     # Parse options with getopt (supports long options)
     local opts
-    if ! opts=$(getopt -o hvRp:n --long help,verbose,recursive,password:,dry-run -n "$(basename "$0")" -- "$@"); then
+    if ! opts=$(getopt -o dhvRp:n --long decrypt,help,verbose,recursive,password:,dry-run -n "$(basename "$0")" -- "$@"); then
         >&2 usage
         exit 1
     fi
@@ -161,6 +247,10 @@ main() {
             -h|--help)
                 usage
                 exit 0
+                ;;
+            -d|--decrypt)
+                DECRYPT=true
+                shift
                 ;;
             -v|--verbose)
                 VERBOSE=true
@@ -190,7 +280,11 @@ main() {
 
     # Prompt for password if not provided
     if [[ -z "$PASSWORD" ]]; then
-        PASSWORD="$(prompt_password "Enter password: ")"
+        if [[ "$DECRYPT" == true ]]; then
+            PASSWORD="$(prompt_password "Enter password: ")"
+        else
+            PASSWORD="$(prompt_password_confirm)"
+        fi
     fi
 
     # Warn about short passwords
@@ -206,8 +300,14 @@ main() {
     # Process each file/folder
     local exit_code=0
     for item in "$@"; do
-        if ! unlock_item "$item"; then
-            exit_code=1
+        if [[ "$DECRYPT" == true ]]; then
+            if ! unlock_item "$item"; then
+                exit_code=1
+            fi
+        else
+            if ! lock_item "$item"; then
+                exit_code=1
+            fi
         fi
     done
 
