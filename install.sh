@@ -5,19 +5,24 @@
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/bdelespierre/persephone/master/install.sh | bash
 #   curl -fsSL https://raw.githubusercontent.com/bdelespierre/persephone/master/install.sh | PREFIX=/usr/local bash
+#   curl -fsSL https://raw.githubusercontent.com/bdelespierre/persephone/master/install.sh | TAG=v0.1.0 bash
 #
 
 set -euo pipefail
 
+info()  { echo -e "\033[0;32m[INFO]\033[0m $*"; }
+error() { >&2 echo -e "\033[0;31m[ERROR]\033[0m $*"; }
+
 REPO="bdelespierre/persephone"
-BRANCH="master"
-BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
+TAG="${TAG:-$(curl -fsSL "https://api.github.com/repos/$REPO/tags" | grep -o '"name": *"[^"]*"' | head -1 | cut -d'"' -f4)}"
+if [[ -z "$TAG" ]]; then
+    error "Failed to fetch latest release tag"
+    exit 1
+fi
+BASE_URL="https://raw.githubusercontent.com/$REPO/$TAG"
 PREFIX="${PREFIX:-$HOME/.local}"
 BINDIR="$PREFIX/bin"
 LIBDIR="$PREFIX/lib/persephone"
-
-info()  { echo -e "\033[0;32m[INFO]\033[0m $*"; }
-error() { >&2 echo -e "\033[0;31m[ERROR]\033[0m $*"; }
 
 # Check dependencies
 if ! command -v openssl &>/dev/null; then
@@ -34,7 +39,7 @@ fi
 mkdir -p "$BINDIR" "$LIBDIR"
 
 # Download files
-info "Downloading persephone to $PREFIX..."
+info "Downloading persephone $TAG to $PREFIX..."
 
 curl -fsSL "$BASE_URL/bin/crypt" -o "$BINDIR/crypt"
 curl -fsSL "$BASE_URL/lib/persephone/utils.bash" -o "$LIBDIR/utils.bash"
