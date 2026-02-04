@@ -363,7 +363,7 @@ test_encrypt_recursive_verbose() {
     output="$("$CRYPT" --password=testpassword -R -v "$testdir" 2>&1)"
 
     assert_true "[[ \"\$output\" == *'Encrypted:'* ]]" "-R -v shows encrypted messages"
-    assert_true "[[ \"\$output\" == *'Encoded:'* ]]" "-R -v shows encoded messages for files"
+    assert_true "[[ \"\$output\" == *'Encrypted file:'* ]]" "-R -v shows encrypted file messages"
     teardown
 }
 
@@ -743,7 +743,7 @@ test_decrypt_recursive_verbose() {
     output="$("$CRYPT" -d --password=testpassword -R -v "$encrypted_dir" 2>&1)"
 
     assert_true "[[ \"\$output\" == *'Decrypted:'* ]]" "-R -v shows decrypted messages"
-    assert_true "[[ \"\$output\" == *'Decoded:'* ]]" "-R -v shows decoded messages for files"
+    assert_true "[[ \"\$output\" == *'Decrypted file:'* ]]" "-R -v shows decrypted file messages"
     teardown
 }
 

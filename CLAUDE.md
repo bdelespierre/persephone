@@ -20,10 +20,11 @@ To run the tool directly without installing, use `bin/crypt`.
 
 ## Architecture
 
-**One command** (`bin/crypt`) with a utility library (`lib/persephone/utils.sh`).
+**One command** (`bin/crypt`) with two library files in `lib/persephone/`.
 
-- **`bin/crypt`** — Encrypts by default; pass `-d/--decrypt` to decrypt. Encrypts content with `openssl enc -aes-256-cbc -salt -pbkdf2 -base64`, then renames the file to a URL-safe base64 encoding of the encrypted original filename. Decryption reverses the process: renames first, then decrypts content. Encrypt mode prompts for password confirmation (double-entry); decrypt mode prompts once.
-- **`lib/persephone/utils.sh`** — Shared functions: colored logging (`log_info`, `log_warn`, `log_error`, `die`), `command_exists`, `file_readable`, `prompt_password` (masked input with backspace support), `warn_short_password` (warns if <8 chars), `prompt_password_confirm` (double-entry confirmation).
+- **`bin/crypt`** — Entry point: CLI argument parsing (`usage`, `main`), global state, and dispatch to `encrypt_item`/`decrypt_item`. Encrypts by default; `-d/--decrypt` switches to decrypt mode. Encrypt mode prompts for password confirmation (double-entry); decrypt mode prompts once.
+- **`lib/persephone/crypt.sh`** — Core encryption logic: `encrypt_name`/`decrypt_name` (filename encryption via AES-256-CBC + URL-safe base64), `encrypt_file`/`decrypt_file` (file content encryption), `encrypt_item`/`decrypt_item` (recursive file/directory processing with dry-run support). These functions use globals (`$VERBOSE`, `$RECURSIVE`, `$PASSWORD`, `$DRY_RUN`) set by `main()`.
+- **`lib/persephone/utils.sh`** — General utilities: colored logging (`log_info`, `log_warn`, `log_error`, `log_verbose`, `die`), `command_exists`, `file_readable`, `prompt_password` (masked input with backspace support), `warn_short_password` (warns if <8 chars), `prompt_password_confirm` (double-entry confirmation).
 
 CLI pattern: `crypt [OPTIONS] [--] FILE...` with flags `-d` (decrypt), `-h` (help), `-v` (verbose), `-R` (recursive), `-p PASSWORD`, `-n` (dry-run).
 

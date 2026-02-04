@@ -24,6 +24,13 @@ log_error() {
     >&2 echo -e "${RED}[ERROR]${NC} $*"
 }
 
+# Log a verbose message (only when $VERBOSE is true)
+log_verbose() {
+    if [[ "$VERBOSE" == true ]]; then
+        log_info "$@"
+    fi
+}
+
 # Print error message and exit
 die() {
     log_error "$@"
