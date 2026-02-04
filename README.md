@@ -2,15 +2,17 @@
 
 A Bash-based file encryption tool that encrypts both file contents and filenames using AES-256-CBC encryption.
 
-## Features
+## Table of Contents
 
-- Encrypts file contents using AES-256-CBC with PBKDF2 key derivation
-- Encrypts filenames to URL-safe base64 format
-- Supports recursive encryption/decryption of directories
-- Password confirmation when encrypting (prevents typos)
-- Password length warnings for weak passwords
-- Dry-run mode to preview operations
-- Verbose logging option
+- [Installation](#installation)
+- [Uninstallation](#uninstallation)
+- [Usage](#usage)
+- [Options Reference](#options-reference)
+- [Encryption Details](#encryption-details)
+- [Security Considerations](#security-considerations)
+- [Limitations](#limitations)
+- [Running Tests](#running-tests)
+- [License](#license)
 
 ## Installation
 
