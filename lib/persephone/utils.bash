@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# utils.sh - Utility functions for bash-conceal
+# utils.bash - Utility functions for persephone
 #
 
 # Colors for output

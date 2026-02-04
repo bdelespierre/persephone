@@ -1,6 +1,6 @@
 .PHONY: test install uninstall
 
-PREFIX ?= /usr/local
+PREFIX ?= $(HOME)/.local
 BINDIR := $(PREFIX)/bin
 LIBDIR := $(PREFIX)/lib
 
@@ -11,8 +11,8 @@ install:
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(LIBDIR)/persephone
 	@cp bin/crypt $(BINDIR)/crypt
-	@cp lib/persephone/utils.sh $(LIBDIR)/persephone/utils.sh
-	@cp lib/persephone/crypt.sh $(LIBDIR)/persephone/crypt.sh
+	@cp lib/persephone/utils.bash $(LIBDIR)/persephone/utils.bash
+	@cp lib/persephone/crypt.bash $(LIBDIR)/persephone/crypt.bash
 	@chmod +x $(BINDIR)/crypt
 	@echo "Installed crypt to $(BINDIR)"
 	@echo "Installed libs to $(LIBDIR)/persephone"

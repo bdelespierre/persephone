@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# crypt.sh - Encryption/decryption functions for persephone
+# crypt.bash - Encryption/decryption functions for persephone
 #
 
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if ! declare -F log_info &>/dev/null; then
-    source "$LIB_DIR/utils.sh"
+    source "$LIB_DIR/utils.bash"
 fi
 
 # Encrypt a filename using AES-256-CBC (URL-safe base64 output)

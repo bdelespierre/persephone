@@ -14,25 +14,33 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
 
 ## Installation
 
+### Quick install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bdelespierre/persephone/master/install.sh | bash
+```
+
+This installs to `~/.local` by default. To install to a different location:
+```bash
+curl -fsSL https://raw.githubusercontent.com/bdelespierre/persephone/master/install.sh | PREFIX=/usr/local bash
+```
+
+### From source
+
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/bdelespierre/persephone.git
    cd persephone
    ```
 
-2. Install using make (installs to `/usr/local/bin`):
+2. Install using make (installs to `~/.local/bin` by default):
    ```bash
-   sudo make install
+   make install
    ```
 
    Or install to a custom location:
    ```bash
-   make install PREFIX=~/.local
-   ```
-
-   Alternatively, add the `bin` directory to your PATH:
-   ```bash
-   export PATH="$PATH:$(pwd)/bin"
+   sudo make install PREFIX=/usr/local
    ```
 
 3. Ensure OpenSSL is installed (required for encryption):
@@ -43,12 +51,12 @@ A Bash-based file encryption tool that encrypts both file contents and filenames
 ## Uninstallation
 
 ```bash
-sudo make uninstall
+make uninstall
 ```
 
 Or if installed with a custom prefix:
 ```bash
-make uninstall PREFIX=~/.local
+sudo make uninstall PREFIX=/usr/local
 ```
 
 ## Usage
@@ -137,10 +145,10 @@ crypt -d -v encrypted_file
 make test
 ```
 
-Or run individual test files:
+Or run individual test suites:
 ```bash
-bash tests/test_crypt.sh
-bash tests/test_utils.sh
+bats tests/test_crypt.bats
+bats tests/test_utils.bats
 ```
 
 ## License

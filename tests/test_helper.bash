@@ -3,7 +3,7 @@
 PROJECT_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 CRYPT="$PROJECT_ROOT/bin/crypt"
 
-source "$PROJECT_ROOT/lib/persephone/utils.sh"
+source "$PROJECT_ROOT/lib/persephone/utils.bash"
 
 find_encrypted_file() {
     local dir="$1"
