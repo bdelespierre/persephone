@@ -1,4 +1,4 @@
-# persephone.sh
+# Persephone
 
 A Bash tool that encrypts file contents and filenames using AES-256-CBC.
 
